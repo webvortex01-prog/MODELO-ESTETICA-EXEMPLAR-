@@ -50,12 +50,12 @@ export default function ReactivationCampaignsTab() {
               </p>
             </div>
 
-            <div className="pt-4 border-t border-white/10 flex items-center justify-between">
+            <div className="pt-4 border-t border-white/10 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
               <span className="font-mono text-[8px] text-stone-500 uppercase tracking-widest">Canal: WhatsApp API</span>
               <button 
                 type="button"
                 onClick={() => handleTrigger(camp.id, camp.title)}
-                className={`px-4 py-2 font-mono text-[9px] uppercase tracking-widest transition-all inline-flex items-center gap-2 cursor-pointer font-bold ${
+                className={`w-full sm:w-auto px-4 py-2.5 sm:py-2 font-mono text-[9px] uppercase tracking-widest transition-all inline-flex items-center justify-center gap-2 cursor-pointer font-bold ${
                   camp.sent 
                     ? 'bg-stone-800 text-stone-300 hover:bg-stone-700' 
                     : 'bg-[#D4AF37] text-black hover:bg-white'

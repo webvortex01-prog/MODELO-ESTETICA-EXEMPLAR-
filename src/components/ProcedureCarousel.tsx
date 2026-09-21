@@ -49,6 +49,7 @@ export default function ProcedureCarousel({ procedures, onSelectProcedure }: Pro
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isAutoPlaying, setIsAutoPlaying] = useState(true);
   const carouselTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const touchStartX = useRef<number | null>(null);
 
   const categories = [
     { id: 'all', label: 'Todos os Protocolos' },
@@ -76,6 +77,25 @@ export default function ProcedureCarousel({ procedures, onSelectProcedure }: Pro
     setCurrentIndex(prev => (prev <= 0 ? maxIndex : prev - 1));
   };
 
+  const handleTouchStart = (e: React.TouchEvent) => {
+    touchStartX.current = e.touches[0].clientX;
+    setIsAutoPlaying(false);
+  };
+
+  const handleTouchEnd = (e: React.TouchEvent) => {
+    if (touchStartX.current === null) return;
+    const diff = touchStartX.current - e.changedTouches[0].clientX;
+    if (Math.abs(diff) > 40) {
+      if (diff > 0) {
+        nextSlide();
+      } else {
+        prevSlide();
+      }
+    }
+    touchStartX.current = null;
+    setIsAutoPlaying(true);
+  };
+
   // Reset index when category changes
   useEffect(() => {
     setCurrentIndex(0);
@@ -96,12 +116,12 @@ export default function ProcedureCarousel({ procedures, onSelectProcedure }: Pro
 
   return (
     <div 
-      className="relative space-y-12"
+      className="relative space-y-8 sm:space-y-12"
       onMouseEnter={() => setIsAutoPlaying(false)}
       onMouseLeave={() => setIsAutoPlaying(true)}
     >
       {/* CATEGORY FILTER PILLS */}
-      <div className="flex flex-wrap items-center justify-center gap-3">
+      <div className="flex flex-wrap items-center justify-center gap-2 sm:gap-3 px-2">
         {categories.map(cat => {
           const isActive = activeCategory === cat.id;
           return (
@@ -110,7 +130,7 @@ export default function ProcedureCarousel({ procedures, onSelectProcedure }: Pro
               onClick={() => setActiveCategory(cat.id)}
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.96 }}
-              className={`px-6 py-3 rounded-full text-xs font-mono tracking-widest uppercase transition-all duration-300 cursor-pointer ${
+              className={`px-4 sm:px-6 py-2.5 sm:py-3 rounded-full text-[10px] sm:text-xs font-mono tracking-wider sm:tracking-widest uppercase transition-all duration-300 cursor-pointer ${
                 isActive
                   ? 'bg-gradient-to-r from-[#D4AF37] to-[#F3E5AB] text-black font-semibold shadow-[0_0_25px_rgba(212,175,55,0.4)] border border-[#F3E5AB]'
                   : 'bg-stone-900/80 text-stone-400 border border-stone-800 hover:border-[#D4AF37]/50 hover:text-white hover:bg-stone-800/80'
@@ -124,52 +144,56 @@ export default function ProcedureCarousel({ procedures, onSelectProcedure }: Pro
 
       {/* CAROUSEL CONTROLS BAR */}
       <div className="flex items-center justify-between px-2">
-        <div className="flex items-center gap-3">
-          <span className="font-mono text-xs uppercase tracking-widest text-[#D4AF37]">
+        <div className="flex items-center gap-2 sm:gap-3">
+          <span className="font-mono text-[10px] sm:text-xs uppercase tracking-wider sm:tracking-widest text-[#D4AF37]">
             Etapa {String(currentIndex + 1).padStart(2, '0')}
           </span>
-          <div className="w-24 h-1.5 bg-stone-800 rounded-full overflow-hidden">
+          <div className="w-16 sm:w-24 h-1.5 bg-stone-800 rounded-full overflow-hidden">
             <motion.div 
               className="h-full bg-gradient-to-r from-[#D4AF37] to-amber-200 rounded-full"
               animate={{ width: `${((currentIndex + 1) / TOTAL_SLIDES) * 100}%` }}
               transition={{ duration: 0.3, ease: 'easeOut' }}
             />
           </div>
-          <span className="font-mono text-xs uppercase tracking-widest text-stone-500">
+          <span className="font-mono text-[10px] sm:text-xs uppercase tracking-wider sm:tracking-widest text-stone-500">
             {String(TOTAL_SLIDES).padStart(2, '0')}
           </span>
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2 sm:gap-3">
           <motion.button
             onClick={prevSlide}
             whileHover={{ scale: 1.1, backgroundColor: '#D4AF37', color: '#000' }}
             whileTap={{ scale: 0.9 }}
             aria-label="Procedimento anterior"
-            className="w-12 h-12 rounded-full border border-[#D4AF37]/40 bg-stone-950/80 text-[#D4AF37] flex items-center justify-center shadow-lg backdrop-blur-md transition-colors cursor-pointer"
+            className="w-10 h-10 sm:w-12 sm:h-12 rounded-full border border-[#D4AF37]/40 bg-stone-950/80 text-[#D4AF37] flex items-center justify-center shadow-lg backdrop-blur-md transition-colors cursor-pointer"
           >
-            <ChevronLeft className="w-5 h-5" />
+            <ChevronLeft className="w-4 h-4 sm:w-5 sm:h-5" />
           </motion.button>
           <motion.button
             onClick={nextSlide}
             whileHover={{ scale: 1.1, backgroundColor: '#D4AF37', color: '#000' }}
             whileTap={{ scale: 0.9 }}
             aria-label="Próximo procedimento"
-            className="w-12 h-12 rounded-full border border-[#D4AF37]/40 bg-stone-950/80 text-[#D4AF37] flex items-center justify-center shadow-lg backdrop-blur-md transition-colors cursor-pointer"
+            className="w-10 h-10 sm:w-12 sm:h-12 rounded-full border border-[#D4AF37]/40 bg-stone-950/80 text-[#D4AF37] flex items-center justify-center shadow-lg backdrop-blur-md transition-colors cursor-pointer"
           >
-            <ChevronRight className="w-5 h-5" />
+            <ChevronRight className="w-4 h-4 sm:w-5 sm:h-5" />
           </motion.button>
         </div>
       </div>
 
       {/* CAROUSEL TRACK */}
-      <div className="relative overflow-hidden py-4">
+      <div 
+        className="relative overflow-hidden py-2 sm:py-4"
+        onTouchStart={handleTouchStart}
+        onTouchEnd={handleTouchEnd}
+      >
         <motion.div 
-          className="flex gap-6 md:gap-8"
-          animate={{ x: `calc(-${currentIndex * 100}% - ${currentIndex * 1.5}rem)` }}
+          className="flex gap-4 sm:gap-6 md:gap-8"
+          animate={{ x: `calc(-${currentIndex * 100}% - ${currentIndex * 1}rem)` }}
           transition={{ type: 'spring', stiffness: 220, damping: 28 }}
         >
-          {filteredProcedures.map((proc, idx) => {
+          {filteredProcedures.map((proc) => {
             const image = PROCEDURE_IMAGES[proc.id] || 'https://images.unsplash.com/photo-1512496015851-a90fb38ba796?auto=format&fit=crop&w=800&q=80';
             const tag = PROCEDURE_TAGS[proc.id] || { label: 'Exclusivo', icon: Sparkles, color: 'bg-[#D4AF37]/20 text-[#D4AF37] border-[#D4AF37]/30' };
             const TagIcon = tag.icon;
@@ -182,10 +206,10 @@ export default function ProcedureCarousel({ procedures, onSelectProcedure }: Pro
                 <motion.div
                   whileHover={{ y: -8 }}
                   transition={{ duration: 0.3 }}
-                  className="group relative bg-gradient-to-b from-[#141619] to-[#0A0A0A] border border-[#D4AF37]/20 hover:border-[#D4AF37]/60 rounded-3xl overflow-hidden shadow-2xl transition-all duration-500 flex flex-col justify-between h-full min-h-[520px]"
+                  className="group relative bg-gradient-to-b from-[#141619] to-[#0A0A0A] border border-[#D4AF37]/20 hover:border-[#D4AF37]/60 rounded-2xl sm:rounded-3xl overflow-hidden shadow-2xl transition-all duration-500 flex flex-col justify-between h-full min-h-[460px] sm:min-h-[520px]"
                 >
                   {/* Image Container with Luxury Overlay */}
-                  <div className="relative h-64 w-full overflow-hidden">
+                  <div className="relative h-52 sm:h-64 w-full overflow-hidden">
                     <img 
                       src={image} 
                       alt={proc.name}
@@ -195,16 +219,16 @@ export default function ProcedureCarousel({ procedures, onSelectProcedure }: Pro
                     <div className="absolute inset-0 bg-gradient-to-t from-[#141619] via-[#141619]/40 to-transparent" />
                     
                     {/* Badge Pill */}
-                    <div className="absolute top-4 left-4 z-10">
-                      <span className={`inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-[10px] font-mono uppercase tracking-widest border backdrop-blur-md ${tag.color}`}>
+                    <div className="absolute top-3 sm:top-4 left-3 sm:left-4 z-10">
+                      <span className={`inline-flex items-center gap-1.5 px-3 py-1 sm:px-3.5 sm:py-1.5 rounded-full text-[9px] sm:text-[10px] font-mono uppercase tracking-wider sm:tracking-widest border backdrop-blur-md ${tag.color}`}>
                         <TagIcon className="w-3 h-3" />
                         {tag.label}
                       </span>
                     </div>
 
                     {/* Duration Pill */}
-                    <div className="absolute top-4 right-4 z-10">
-                      <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[10px] font-mono text-stone-300 bg-black/60 border border-white/10 backdrop-blur-md">
+                    <div className="absolute top-3 sm:top-4 right-3 sm:right-4 z-10">
+                      <span className="inline-flex items-center gap-1.5 px-3 py-1 sm:px-3.5 sm:py-1.5 rounded-full text-[9px] sm:text-[10px] font-mono text-stone-300 bg-black/60 border border-white/10 backdrop-blur-md">
                         <Clock className="w-3 h-3 text-[#D4AF37]" />
                         {proc.durationMinutes} min
                       </span>
@@ -212,23 +236,23 @@ export default function ProcedureCarousel({ procedures, onSelectProcedure }: Pro
                   </div>
 
                   {/* Content Area */}
-                  <div className="p-6 md:p-8 flex-1 flex flex-col justify-between space-y-6">
-                    <div className="space-y-3">
-                      <h3 className="font-serif text-2xl text-white tracking-wide group-hover:text-[#D4AF37] transition-colors line-clamp-1">
+                  <div className="p-4 sm:p-6 md:p-8 flex-1 flex flex-col justify-between space-y-4 sm:space-y-6">
+                    <div className="space-y-2 sm:space-y-3">
+                      <h3 className="font-serif text-xl sm:text-2xl text-white tracking-wide group-hover:text-[#D4AF37] transition-colors line-clamp-1">
                         {proc.name}
                       </h3>
-                      <p className="font-mono text-xs text-stone-400 uppercase tracking-wider leading-relaxed line-clamp-3">
+                      <p className="font-mono text-[11px] sm:text-xs text-stone-400 uppercase tracking-wider leading-relaxed line-clamp-3">
                         {proc.description}
                       </p>
                     </div>
 
                     {/* Price and CTA */}
-                    <div className="pt-6 border-t border-white/10 flex items-center justify-between gap-4">
+                    <div className="pt-4 sm:pt-6 border-t border-white/10 flex items-center justify-between gap-3 sm:gap-4">
                       <div>
-                        <span className="font-mono text-[9px] uppercase tracking-widest text-stone-500 block">
+                        <span className="font-mono text-[8px] sm:text-[9px] uppercase tracking-wider text-stone-500 block">
                           Investimento
                         </span>
-                        <span className="font-serif text-2xl text-[#D4AF37] font-normal">
+                        <span className="font-serif text-lg sm:text-2xl text-[#D4AF37] font-normal">
                           R$ {proc.price.toLocaleString('pt-BR')}
                         </span>
                       </div>
@@ -237,10 +261,10 @@ export default function ProcedureCarousel({ procedures, onSelectProcedure }: Pro
                         onClick={() => onSelectProcedure(proc)}
                         whileHover={{ scale: 1.05 }}
                         whileTap={{ scale: 0.95 }}
-                        className="px-6 py-3 rounded-full bg-gradient-to-r from-[#D4AF37] to-[#F3E5AB] text-black font-mono text-[10px] uppercase tracking-[0.2em] font-bold shadow-[0_0_20px_rgba(212,175,55,0.3)] hover:shadow-[0_0_30px_rgba(212,175,55,0.6)] transition-all flex items-center gap-2 cursor-pointer"
+                        className="px-4 sm:px-6 py-2.5 sm:py-3 rounded-full bg-gradient-to-r from-[#D4AF37] to-[#F3E5AB] text-black font-mono text-[9px] sm:text-[10px] uppercase tracking-wider sm:tracking-[0.2em] font-bold shadow-[0_0_20px_rgba(212,175,55,0.3)] hover:shadow-[0_0_30px_rgba(212,175,55,0.6)] transition-all flex items-center gap-1.5 sm:gap-2 cursor-pointer"
                       >
                         Reservar
-                        <ArrowRight className="w-3.5 h-3.5" />
+                        <ArrowRight className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
                       </motion.button>
                     </div>
                   </div>

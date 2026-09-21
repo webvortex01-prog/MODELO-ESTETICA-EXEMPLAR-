@@ -75,7 +75,7 @@ export default function StaffCommissionsTab({ appointments = [] }: StaffCommissi
                 </div>
               </div>
 
-              <div className="pt-4 border-t border-white/10 flex items-center justify-between">
+              <div className="pt-4 border-t border-white/10 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
                 <div>
                   <span className="font-mono text-[8px] text-stone-500 uppercase tracking-widest block">Comissão a Pagar</span>
                   <span className="font-serif text-xl text-[#D4AF37]">R$ {Number(commissionVal).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</span>
@@ -83,7 +83,7 @@ export default function StaffCommissionsTab({ appointments = [] }: StaffCommissi
                 <button 
                   type="button"
                   onClick={() => handleApprove(staff.name, commissionVal)}
-                  className="px-4 py-2 bg-[#D4AF37] text-black font-mono text-[9px] uppercase tracking-widest hover:bg-white transition-all cursor-pointer font-bold"
+                  className="w-full sm:w-auto px-4 py-2.5 sm:py-2 bg-[#D4AF37] text-black font-mono text-[9px] uppercase tracking-widest hover:bg-white transition-all cursor-pointer font-bold text-center"
                 >
                   Liberar Repasse
                 </button>

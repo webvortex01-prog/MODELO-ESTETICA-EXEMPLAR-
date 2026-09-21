@@ -205,7 +205,7 @@ export default function AdminApp({ onBackToClient }: AdminAppProps) {
           </div>
 
           {/* Horizontal Tab Bar for Mobile & Quick Switch */}
-          <div className="flex md:hidden items-center gap-2 overflow-x-auto no-scrollbar py-1">
+          <div className="flex md:hidden items-center gap-1.5 sm:gap-2 overflow-x-auto no-scrollbar py-1 -mx-4 px-4 sm:-mx-6 sm:px-6">
             {menuItems.map(item => {
               const Icon = item.icon;
               const isActive = activeTab === item.id;
@@ -214,7 +214,7 @@ export default function AdminApp({ onBackToClient }: AdminAppProps) {
                   key={`mob-tab-${item.id}`}
                   type="button"
                   onClick={() => setActiveTab(item.id)}
-                  className={`px-3 py-1.5 rounded-full text-[10px] font-mono uppercase tracking-wider whitespace-nowrap flex items-center gap-1.5 transition-all cursor-pointer ${
+                  className={`px-3 py-1.5 rounded-full text-[9px] sm:text-[10px] font-mono uppercase tracking-wider whitespace-nowrap flex items-center gap-1.5 transition-all cursor-pointer shrink-0 ${
                     isActive
                       ? 'bg-gradient-to-r from-[#D4AF37] to-[#F3E5AB] text-black font-bold shadow-[0_0_10px_rgba(212,175,55,0.3)]'
                       : 'bg-stone-900 border border-stone-800 text-stone-300 hover:text-white'
@@ -229,7 +229,7 @@ export default function AdminApp({ onBackToClient }: AdminAppProps) {
         </div>
 
         {/* Scrollable Viewport with ErrorBoundary */}
-        <div className="flex-1 p-4 sm:p-8 overflow-y-auto space-y-8">
+        <div className="flex-1 p-3.5 sm:p-6 md:p-8 overflow-y-auto space-y-6 sm:space-y-8">
           <ErrorBoundary
             fallbackTitle="Erro no módulo administrativo"
             fallbackMessage="Houve um problema temporário ao carregar esta seção. Clique abaixo para reiniciar o módulo."
@@ -478,8 +478,11 @@ export default function AdminApp({ onBackToClient }: AdminAppProps) {
                   </div>
                 </div>
                 
-                <div className="bg-[#0A0A0A] border border-[#D4AF37]/20 p-4 sm:p-6 rounded-2xl shadow-2xl overflow-x-auto">
-                  <table className="w-full text-left text-sm text-stone-300 font-mono uppercase tracking-widest min-w-[600px]">
+                <div className="text-[9px] font-mono text-stone-500 uppercase tracking-widest block sm:hidden">
+                  ← Deslize para visualizar o prontuário →
+                </div>
+                <div className="bg-[#0A0A0A] border border-[#D4AF37]/20 p-3.5 sm:p-6 rounded-2xl shadow-2xl overflow-x-auto">
+                  <table className="w-full text-left text-sm text-stone-300 font-mono uppercase tracking-widest min-w-[560px]">
                     <thead className="text-[9px] text-[#D4AF37] border-b border-[#D4AF37]/20">
                       <tr>
                         <th className="py-3 px-2">Nome do Paciente</th>
@@ -517,8 +520,8 @@ export default function AdminApp({ onBackToClient }: AdminAppProps) {
 
                 {/* Patient Record Modal */}
                 {selectedPatient && (
-                  <div className="fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-center justify-center p-4 sm:p-6 overflow-y-auto">
-                    <div className="bg-[#0A0A0A] border border-[#D4AF37] max-w-2xl w-full p-6 sm:p-8 rounded-2xl relative shadow-2xl space-y-6 my-auto">
+                  <div className="fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-center justify-center p-2.5 sm:p-6 overflow-y-auto">
+                    <div className="bg-[#0A0A0A] border border-[#D4AF37] max-w-2xl w-full p-4 sm:p-8 rounded-2xl relative shadow-2xl space-y-4 sm:space-y-6 my-auto max-h-[92vh] overflow-y-auto">
                       <button 
                         type="button"
                         onClick={() => setSelectedPatient(null)}
@@ -760,8 +763,11 @@ export default function AdminApp({ onBackToClient }: AdminAppProps) {
                   </div>
                 </div>
 
-                <div className="bg-[#0A0A0A] border border-[#D4AF37]/20 p-4 sm:p-6 rounded-2xl shadow-2xl overflow-x-auto">
-                  <table className="w-full text-left text-sm text-stone-300 font-mono uppercase tracking-widest min-w-[650px]">
+                <div className="text-[9px] font-mono text-stone-500 uppercase tracking-widest block sm:hidden">
+                  ← Deslize para ver custos e status do estoque →
+                </div>
+                <div className="bg-[#0A0A0A] border border-[#D4AF37]/20 p-3.5 sm:p-6 rounded-2xl shadow-2xl overflow-x-auto">
+                  <table className="w-full text-left text-sm text-stone-300 font-mono uppercase tracking-widest min-w-[580px]">
                     <thead className="text-[9px] text-[#D4AF37] border-b border-[#D4AF37]/20">
                       <tr>
                         <th className="py-3 px-2">Insumo / Produto</th>
@@ -804,10 +810,10 @@ export default function AdminApp({ onBackToClient }: AdminAppProps) {
 
                 {/* Add Inventory Modal (Clean, no prompt) */}
                 {showAddInventoryModal && (
-                  <div className="fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-center justify-center p-4">
+                  <div className="fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-center justify-center p-2.5 sm:p-4 overflow-y-auto">
                     <form 
                       onSubmit={handleAddInventory}
-                      className="bg-[#0A0A0A] border border-[#D4AF37] max-w-md w-full p-6 sm:p-8 rounded-2xl relative shadow-2xl space-y-4"
+                      className="bg-[#0A0A0A] border border-[#D4AF37] max-w-md w-full p-4 sm:p-8 rounded-2xl relative shadow-2xl space-y-4 my-auto max-h-[92vh] overflow-y-auto"
                     >
                       <button 
                         type="button"
