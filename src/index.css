@@ -1,0 +1,33 @@
+@import "tailwindcss";
+
+@import "tailwindcss";
+
+@theme {
+  --color-brand-primary: #090A0C;
+  --color-brand-secondary: #141619;
+  --color-brand-accent: #D4AF37;
+  --color-brand-accent-secondary: #F3E5AB;
+  --color-brand-text-primary: #FFFFFF;
+  --color-brand-text-secondary: #A1A8B3;
+
+  --font-sans: 'Plus Jakarta Sans', sans-serif;
+  --font-serif: 'Cormorant Garamond', serif;
+}
+
+@layer base {
+  :root {
+    --primary-bg: #090A0C;
+    --secondary-bg: #141619;
+    --accent-primary: #D4AF37;
+    --accent-secondary: #F3E5AB;
+    --text-primary: #FFFFFF;
+    --text-secondary: #A1A8B3;
+  }
+}
+
+.glass {
+  background: rgba(20, 22, 25, 0.75);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(212, 175, 55, 0.25);
+}

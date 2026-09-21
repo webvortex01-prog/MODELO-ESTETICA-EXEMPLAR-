@@ -1,0 +1,6 @@
+{
+  "name": "Lumière Estética",
+  "description": "Sistema de agendamento e gestão premium para clínicas de estética avançada e harmonização facial.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
