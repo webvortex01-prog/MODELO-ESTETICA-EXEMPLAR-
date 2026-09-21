@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { procedures, availableTimes } from '../data';
 import { ArrowRight, Calendar as CalendarIcon, CheckCircle2, Sparkles, Gem, Clock, Star, ShieldCheck, Copy, Check } from 'lucide-react';
 import { Procedure } from '../types';
+import { addStoredAppointment } from '../utils/appointmentStorage';
 import BeforeAfterSlider from './BeforeAfterSlider';
 import GallerySection from './GallerySection';
 import ProtocolSimulator from './ProtocolSimulator';
@@ -623,8 +624,35 @@ export default function ClientApp() {
                       </button>
                       <motion.button 
                         onClick={() => {
+                          const patientName = name.trim() || 'Paciente Lumière';
+                          const patientPhone = phone.trim() || '(11) 99999-0000';
+                          const procName = selectedProcedure?.name || 'Procedimento Estético';
+                          const procPrice = selectedProcedure?.price || 1800;
+                          const dateVal = selectedDate || new Date().toISOString().split('T')[0];
+                          const timeVal = selectedTime || '10:00';
+                          
+                          // Save to real persistent store for Admin Panel
+                          addStoredAppointment({
+                            clientId: `cli-${Date.now()}`,
+                            clientName: patientName,
+                            clientPhone: patientPhone,
+                            procedureId: selectedProcedure?.id || 'p1',
+                            procedureName: procName,
+                            date: dateVal,
+                            time: timeVal,
+                            price: procPrice,
+                            status: 'confirmed', // Already paid deposit
+                            depositPaid: true,
+                            depositAmount: procPrice * 0.2,
+                            tcleSigned: isSigned,
+                            clinicalNotes: `Agendamento confirmado via Web App com sinal de 20% (PIX). TCLE: ${isSigned ? 'Assinado Digitalmente' : 'Pendente de assinatura presencial'}.`,
+                            anamneseSummary: `${hasPreviousProcedure ? 'Paciente com histórico prévio de procedimentos estéticos.' : 'Primeira experiência estética na clínica.'} CPF: ${cpf || 'Não informado'}`,
+                            room: 'Sala 01 - Injetáveis VIP',
+                            professional: 'Dra. Eliana Becker'
+                          });
+
                           setIsSubmitted(true);
-                          const msg = `✨ *CONFIRMAÇÃO DE AGENDAMENTO - LUMIÈRE CLINIC*\n👤 *Paciente:* ${name} | 📱 *Tel:* ${phone}\n🩺 *Procedimento:* ${selectedProcedure?.name}\n📅 *Data/Hora:* ${selectedDate} às ${selectedTime}\n💳 *Sinal (20%):* R$ ${((selectedProcedure?.price || 0) * 0.2).toFixed(2)} via PIX\n📝 *TCLE:* Termo Digital Assinado`;
+                          const msg = `✨ *CONFIRMAÇÃO DE AGENDAMENTO - LUMIÈRE CLINIC*\n👤 *Paciente:* ${patientName} | 📱 *Tel:* ${patientPhone}\n🩺 *Procedimento:* ${procName}\n📅 *Data/Hora:* ${dateVal} às ${timeVal}\n💳 *Sinal (20%):* R$ ${(procPrice * 0.2).toFixed(2)} via PIX\n📝 *TCLE:* ${isSigned ? 'Termo Digital Assinado' : 'Pendente'}`;
                           const url = `https://wa.me/5511999999999?text=${encodeURIComponent(msg)}`;
                           window.open(url, '_blank');
                         }}

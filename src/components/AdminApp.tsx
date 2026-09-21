@@ -1,14 +1,22 @@
-import { useState, type FormEvent } from 'react';
+import { useState, useEffect, type FormEvent } from 'react';
 import { procedures as initialProcedures, todayAppointments } from '../data';
 import { 
   Users, Calendar as CalendarIcon, TrendingUp, 
   List, Edit2, Trash2, Package, DollarSign, MessageSquare, 
   ShieldCheck, FileText, CheckCircle2, AlertCircle, Award, Send,
-  ArrowLeft, Plus, X, Phone, Check, RefreshCw
+  ArrowLeft, Plus, X, Phone, Check, RefreshCw, Clock, Filter, Sparkles, Stethoscope
 } from 'lucide-react';
 import { Procedure, Appointment } from '../types';
+import { 
+  getStoredAppointments, 
+  updateStoredAppointment, 
+  addStoredAppointment, 
+  deleteStoredAppointment, 
+  subscribeAppointments 
+} from '../utils/appointmentStorage';
 import StaffCommissionsTab from './StaffCommissionsTab';
 import ReactivationCampaignsTab from './ReactivationCampaignsTab';
+import CrmKanbanBoard from './CrmKanbanBoard';
 import ErrorBoundary from './ErrorBoundary';
 
 interface InventoryItem {
@@ -29,7 +37,34 @@ export default function AdminApp({ onBackToClient }: AdminAppProps) {
   const [activeTab, setActiveTab] = useState<'dashboard' | 'agenda' | 'clients' | 'procedures' | 'inventory' | 'finance' | 'commissions' | 'reactivation'>('dashboard');
   
   const [procs, setProcs] = useState<Procedure[]>(() => initialProcedures || []);
-  const [appointments, setAppointments] = useState<Appointment[]>(() => todayAppointments || []);
+  const [appointments, setAppointments] = useState<Appointment[]>(() => getStoredAppointments());
+  const [agendaDate, setAgendaDate] = useState<string>(() => new Date().toISOString().split('T')[0]);
+  const [agendaRoomFilter, setAgendaRoomFilter] = useState<string>('all');
+
+  useEffect(() => {
+    // Initial sync
+    setAppointments(getStoredAppointments());
+    // Reactive sync on storage events or cross-tab booking
+    const unsubscribe = subscribeAppointments((updated) => {
+      setAppointments(updated);
+    });
+    return () => unsubscribe();
+  }, []);
+
+  const handleUpdateAppointment = (id: string, updates: Partial<Appointment>) => {
+    const updated = updateStoredAppointment(id, updates);
+    setAppointments(updated);
+  };
+
+  const handleAddAppointment = (newApp: Omit<Appointment, 'id' | 'createdAt'>) => {
+    addStoredAppointment(newApp);
+    setAppointments(getStoredAppointments());
+  };
+
+  const handleDeleteAppointment = (id: string) => {
+    const updated = deleteStoredAppointment(id);
+    setAppointments(updated);
+  };
 
   const [isAddingProc, setIsAddingProc] = useState(false);
   const [procForm, setProcForm] = useState<Partial<Procedure>>({});
@@ -375,73 +410,196 @@ export default function AdminApp({ onBackToClient }: AdminAppProps) {
               </div>
             )}
 
-            {/* 2. AGENDA TAB */}
+            {/* 2. AGENDA MASTER TAB (Procedimentos do Dia & Linha do Tempo) */}
             {activeTab === 'agenda' && (
               <div className="space-y-6">
-                <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4">
+                {/* Header & Date Controls */}
+                <div className="flex flex-col lg:flex-row justify-between lg:items-center gap-4 bg-[#0A0A0A] p-4 sm:p-6 rounded-2xl border border-[#D4AF37]/20 shadow-xl">
                   <div>
-                    <h2 className="text-2xl font-serif text-white">Agenda Master & Grade Diária</h2>
+                    <div className="flex items-center gap-2">
+                      <CalendarIcon className="w-5 h-5 text-[#D4AF37]" />
+                      <h2 className="text-xl sm:text-2xl font-serif text-white tracking-wide">
+                        Agenda Master • Procedimentos do Dia
+                      </h2>
+                    </div>
                     <p className="text-stone-400 text-xs font-mono uppercase tracking-widest mt-1">
-                      Gerencie horários, salas de atendimento e encaixes em tempo real.
+                      Controle horário a horário das salas clínicas e check-in de pacientes.
                     </p>
                   </div>
-                  <div className="flex gap-2">
-                    <button 
-                      type="button"
-                      onClick={() => alert('Dia bloqueado para procedimentos cirúrgicos')}
-                      className="px-4 py-2 border border-stone-800 text-stone-300 font-mono text-[10px] uppercase tracking-widest rounded-lg hover:border-[#D4AF37] cursor-pointer"
+
+                  <div className="flex flex-wrap items-center gap-2 sm:gap-3">
+                    {/* Quick Date Pills */}
+                    <div className="flex items-center bg-stone-900 border border-stone-800 rounded-xl p-1">
+                      <button
+                        type="button"
+                        onClick={() => setAgendaDate(new Date().toISOString().split('T')[0])}
+                        className={`px-3 py-1.5 rounded-lg text-[10px] font-mono uppercase tracking-wider transition-all cursor-pointer ${
+                          agendaDate === new Date().toISOString().split('T')[0] ? 'bg-[#D4AF37] text-black font-bold' : 'text-stone-400 hover:text-white'
+                        }`}
+                      >
+                        Hoje
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const tomorrow = new Date();
+                          tomorrow.setDate(tomorrow.getDate() + 1);
+                          setAgendaDate(tomorrow.toISOString().split('T')[0]);
+                        }}
+                        className={`px-3 py-1.5 rounded-lg text-[10px] font-mono uppercase tracking-wider transition-all cursor-pointer ${
+                          agendaDate !== new Date().toISOString().split('T')[0] ? 'bg-[#D4AF37] text-black font-bold' : 'text-stone-400 hover:text-white'
+                        }`}
+                      >
+                        Amanhã
+                      </button>
+                    </div>
+
+                    {/* Date Picker Input */}
+                    <input 
+                      type="date"
+                      value={agendaDate}
+                      onChange={(e) => setAgendaDate(e.target.value)}
+                      className="px-3 py-1.5 bg-stone-900 border border-stone-800 rounded-xl text-xs font-mono text-white focus:outline-none focus:border-[#D4AF37] cursor-pointer"
+                    />
+
+                    {/* Room Selector */}
+                    <select
+                      value={agendaRoomFilter}
+                      onChange={(e) => setAgendaRoomFilter(e.target.value)}
+                      className="px-3 py-1.5 bg-stone-900 border border-stone-800 rounded-xl text-xs font-mono text-white focus:outline-none focus:border-[#D4AF37] cursor-pointer"
                     >
-                      Bloquear Grade
-                    </button>
+                      <option value="all">Todas as Salas (Geral)</option>
+                      <option value="Sala 01">Sala 01 - Injetáveis VIP</option>
+                      <option value="Sala 02">Sala 02 - Harmonização</option>
+                      <option value="Sala 03">Sala 03 - Laser & Corporal</option>
+                    </select>
                   </div>
                 </div>
 
-                <div className="bg-[#0A0A0A] border border-[#D4AF37]/20 p-6 rounded-2xl shadow-2xl divide-y divide-white/5">
-                  {['09:00', '10:00', '11:00', '12:00 (Almoço)', '14:00', '15:00', '16:00', '17:00', '18:00'].map(time => {
+                {/* Day Summary Metrics */}
+                {(() => {
+                  const dayApps = appointments.filter(a => a.date === agendaDate);
+                  const dayTotalRevenue = dayApps.reduce((acc, curr) => acc + (curr.price || 0), 0);
+                  const dayDeposits = dayApps.reduce((acc, curr) => acc + (curr.depositAmount || curr.price * 0.2 || 0), 0);
+
+                  return (
+                    <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+                      <div className="bg-[#0A0A0A] p-4 rounded-xl border border-stone-800 space-y-1">
+                        <span className="text-[9px] font-mono text-stone-500 uppercase tracking-widest block">Atendimentos no Dia</span>
+                        <p className="text-xl sm:text-2xl font-serif text-white">{dayApps.length} Pacientes</p>
+                      </div>
+                      <div className="bg-[#0A0A0A] p-4 rounded-xl border border-stone-800 space-y-1">
+                        <span className="text-[9px] font-mono text-stone-500 uppercase tracking-widest block">Faturamento Previsto</span>
+                        <p className="text-xl sm:text-2xl font-serif text-[#D4AF37]">R$ {dayTotalRevenue.toLocaleString('pt-BR')}</p>
+                      </div>
+                      <div className="bg-[#0A0A0A] p-4 rounded-xl border border-stone-800 space-y-1">
+                        <span className="text-[9px] font-mono text-stone-500 uppercase tracking-widest block">Sinais PIX Garantidos</span>
+                        <p className="text-xl sm:text-2xl font-serif text-emerald-400">R$ {dayDeposits.toLocaleString('pt-BR')}</p>
+                      </div>
+                      <div className="bg-[#0A0A0A] p-4 rounded-xl border border-stone-800 space-y-1">
+                        <span className="text-[9px] font-mono text-stone-500 uppercase tracking-widest block">Ocupação das Salas</span>
+                        <p className="text-xl sm:text-2xl font-serif text-amber-300">
+                          {Math.min(100, Math.round((dayApps.length / 8) * 100))}%
+                        </p>
+                      </div>
+                    </div>
+                  );
+                })()}
+
+                {/* Timeline Grid */}
+                <div className="bg-[#0A0A0A] border border-[#D4AF37]/20 p-4 sm:p-6 rounded-2xl shadow-2xl divide-y divide-white/5 space-y-3">
+                  {['09:00', '10:00', '11:00', '12:00 (Almoço)', '14:00', '15:00', '16:00', '17:00', '18:00', '19:00'].map(time => {
                     const isLunch = time.includes('Almoço');
                     const cleanTime = time.split(' ')[0];
-                    const apt = (appointments || []).find(a => a.time === cleanTime);
+                    const apt = appointments.find(a => a.date === agendaDate && a.time === cleanTime && (agendaRoomFilter === 'all' || (a.room && a.room.includes(agendaRoomFilter))));
 
                     return (
-                      <div key={time} className="flex flex-col sm:flex-row gap-4 py-4 items-start sm:items-center">
-                        <div className="font-mono text-[#D4AF37] w-28 text-sm font-semibold shrink-0">{time}</div>
+                      <div key={time} className="flex flex-col sm:flex-row gap-3 sm:gap-4 py-3 sm:py-4 items-start sm:items-center">
+                        <div className="font-mono text-[#D4AF37] w-24 sm:w-28 text-sm font-semibold shrink-0 flex items-center gap-1.5">
+                          <Clock className="w-3.5 h-3.5 text-[#D4AF37]" />
+                          {time}
+                        </div>
                         <div className="flex-1 w-full">
                           {isLunch ? (
-                            <div className="bg-[#141619] border border-stone-800/80 p-3 rounded-xl text-stone-500 font-mono text-[10px] uppercase tracking-widest">
-                              Intervalo de Almoço & Descanso (Bloqueado)
+                            <div className="bg-[#141619] border border-stone-800/80 p-3 rounded-xl text-stone-500 font-mono text-[10px] uppercase tracking-widest flex items-center justify-between">
+                              <span>Intervalo de Almoço & Sanitização de Salas (Bloqueado)</span>
+                              <span className="text-[8px] bg-stone-900 px-2 py-0.5 rounded text-stone-500">PAUSA</span>
                             </div>
                           ) : apt ? (
-                            <div className="bg-[#141619] border border-[#D4AF37]/40 p-4 rounded-xl flex flex-col sm:flex-row justify-between sm:items-center gap-3 shadow-lg">
-                              <div>
-                                <div className="flex items-center gap-3">
-                                  <p className="text-white font-medium text-sm">{apt.clientName || 'Paciente'}</p>
-                                  <span className="text-[9px] font-mono bg-[#D4AF37]/20 text-[#D4AF37] px-2 py-0.5 rounded uppercase tracking-wider font-semibold">
-                                    Sinal Pago (20%)
+                            <div className="bg-[#121316] hover:bg-[#16181C] border border-[#D4AF37]/40 p-4 rounded-xl flex flex-col md:flex-row justify-between md:items-center gap-3 shadow-lg transition-all">
+                              <div className="space-y-1">
+                                <div className="flex flex-wrap items-center gap-2">
+                                  <div className="w-7 h-7 rounded-full bg-gradient-to-tr from-[#D4AF37] to-[#F3E5AB] text-black font-serif font-bold text-xs flex items-center justify-center">
+                                    {apt.clientName.substring(0, 2).toUpperCase()}
+                                  </div>
+                                  <p className="text-white font-medium text-sm font-serif">{apt.clientName}</p>
+                                  
+                                  {/* Status Pill */}
+                                  <span className={`text-[9px] font-mono px-2 py-0.5 rounded uppercase tracking-wider font-semibold border ${
+                                    apt.status === 'in_progress' ? 'bg-purple-950/60 text-purple-300 border-purple-500/40' :
+                                    apt.status === 'in_waiting' ? 'bg-blue-950/60 text-blue-300 border-blue-500/40' :
+                                    apt.status === 'completed' ? 'bg-[#D4AF37]/20 text-[#D4AF37] border-[#D4AF37]/40' :
+                                    'bg-emerald-950/60 text-emerald-300 border-emerald-500/40'
+                                  }`}>
+                                    {apt.status === 'in_progress' ? '💉 Em Atendimento' :
+                                     apt.status === 'in_waiting' ? '⏳ Na Recepção' :
+                                     apt.status === 'completed' ? '✨ Realizado' :
+                                     '✓ Confirmado'}
+                                  </span>
+
+                                  <span className="text-[9px] font-mono bg-[#D4AF37]/15 text-[#D4AF37] px-2 py-0.5 rounded uppercase font-semibold">
+                                    R$ {(apt.price || 0).toLocaleString('pt-BR')}
                                   </span>
                                 </div>
-                                <p className="text-stone-400 text-[10px] font-mono uppercase tracking-widest mt-1">
-                                  {apt.procedureName || 'Procedimento'} • 📱 {apt.clientPhone || 'Contato'}
+
+                                <p className="text-stone-400 text-[10px] font-mono uppercase tracking-widest pl-9">
+                                  {apt.procedureName} • 📱 {apt.clientPhone} • 📍 {apt.room || 'Sala 01 Injetáveis'}
                                 </p>
                               </div>
-                              <div className="flex items-center gap-2">
+
+                              <div className="flex flex-wrap items-center gap-2 pl-9 md:pl-0">
+                                {/* WhatsApp Reminder */}
                                 <button 
                                   type="button"
                                   onClick={() => {
                                     const phone = (apt.clientPhone || '').replace(/\D/g, '');
-                                    const msg = `Olá ${apt.clientName || ''}, confirmamos seu agendamento para hoje às ${apt.time || ''} na Lumière Clinic.`;
+                                    const msg = `✨ *LUMIÈRE CLINIC - LEMBRETE*\n\nOlá, *${apt.clientName}*! Confirmamos seu procedimento de *${apt.procedureName}* hoje às *${apt.time}* com a nossa especialista. Estamos aguardando você! ✨`;
                                     window.open(`https://wa.me/55${phone}?text=${encodeURIComponent(msg)}`, '_blank');
                                   }}
-                                  className="px-3 py-1.5 rounded-lg border border-[#D4AF37]/40 text-[#D4AF37] hover:bg-[#D4AF37] hover:text-black font-mono text-[9px] uppercase tracking-widest transition-all cursor-pointer"
+                                  className="px-3 py-1.5 rounded-lg bg-emerald-950/40 border border-emerald-500/30 text-emerald-300 hover:bg-emerald-900/50 font-mono text-[9px] uppercase tracking-widest transition-all cursor-pointer flex items-center gap-1 font-semibold"
                                 >
-                                  WhatsApp
+                                  <MessageSquare className="w-3 h-3 text-emerald-400" />
+                                  Lembrete
                                 </button>
-                                <button 
-                                  type="button"
-                                  onClick={() => alert('Função de reagendamento: selecione novo horário.')}
-                                  className="px-3 py-1.5 rounded-lg border border-stone-700 text-stone-400 hover:text-white font-mono text-[9px] uppercase tracking-widest cursor-pointer"
-                                >
-                                  Reagendar
-                                </button>
+
+                                {/* Quick Advance Action */}
+                                {apt.status === 'confirmed' && (
+                                  <button
+                                    type="button"
+                                    onClick={() => handleUpdateAppointment(apt.id, { status: 'in_waiting' })}
+                                    className="px-3 py-1.5 rounded-lg bg-blue-950/40 border border-blue-500/30 text-blue-300 hover:bg-blue-900/50 font-mono text-[9px] uppercase tracking-widest transition-all cursor-pointer font-bold"
+                                  >
+                                    Chegou (Recepção)
+                                  </button>
+                                )}
+                                {apt.status === 'in_waiting' && (
+                                  <button
+                                    type="button"
+                                    onClick={() => handleUpdateAppointment(apt.id, { status: 'in_progress' })}
+                                    className="px-3 py-1.5 rounded-lg bg-purple-950/40 border border-purple-500/30 text-purple-300 hover:bg-purple-900/50 font-mono text-[9px] uppercase tracking-widest transition-all cursor-pointer font-bold"
+                                  >
+                                    Chamar para Sala
+                                  </button>
+                                )}
+                                {apt.status === 'in_progress' && (
+                                  <button
+                                    type="button"
+                                    onClick={() => handleUpdateAppointment(apt.id, { status: 'completed' })}
+                                    className="px-3 py-1.5 rounded-lg bg-[#D4AF37] text-black font-mono text-[9px] uppercase tracking-widest transition-all cursor-pointer font-bold shadow-sm"
+                                  >
+                                    Concluir Procedimento
+                                  </button>
+                                )}
                               </div>
                             </div>
                           ) : (
@@ -451,10 +609,13 @@ export default function AdminApp({ onBackToClient }: AdminAppProps) {
                               </p>
                               <button 
                                 type="button"
-                                onClick={() => alert('Horário bloqueado com sucesso.')}
-                                className="text-[9px] font-mono text-red-400 border border-red-500/20 px-3 py-1 rounded hover:bg-red-500/10 uppercase tracking-widest cursor-pointer"
+                                onClick={() => {
+                                  setActiveTab('clients');
+                                }}
+                                className="text-[9px] font-mono text-[#D4AF37] border border-[#D4AF37]/30 px-3 py-1 rounded-lg hover:bg-[#D4AF37]/10 uppercase tracking-widest cursor-pointer font-semibold flex items-center gap-1"
                               >
-                                Bloquear
+                                <Plus className="w-3 h-3" />
+                                Encaixar no CRM
                               </button>
                             </div>
                           )}
@@ -466,124 +627,14 @@ export default function AdminApp({ onBackToClient }: AdminAppProps) {
               </div>
             )}
 
-            {/* 3. CRM & PRONTUÁRIOS TAB */}
+            {/* 3. CRM KANBAN BOARD & PRONTUÁRIOS TAB */}
             {activeTab === 'clients' && (
-              <div className="space-y-6">
-                <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4">
-                  <div>
-                    <h2 className="text-2xl font-serif text-white">Prontuários & Anamnese Digital</h2>
-                    <p className="text-stone-400 text-xs font-mono uppercase tracking-widest mt-1">
-                      Histórico médico, fichas de avaliação e termos de consentimento assinados.
-                    </p>
-                  </div>
-                </div>
-                
-                <div className="text-[9px] font-mono text-stone-500 uppercase tracking-widest block sm:hidden">
-                  ← Deslize para visualizar o prontuário →
-                </div>
-                <div className="bg-[#0A0A0A] border border-[#D4AF37]/20 p-3.5 sm:p-6 rounded-2xl shadow-2xl overflow-x-auto">
-                  <table className="w-full text-left text-sm text-stone-300 font-mono uppercase tracking-widest min-w-[560px]">
-                    <thead className="text-[9px] text-[#D4AF37] border-b border-[#D4AF37]/20">
-                      <tr>
-                        <th className="py-3 px-2">Nome do Paciente</th>
-                        <th className="py-3 px-2">WhatsApp / Contato</th>
-                        <th className="py-3 px-2">Procedimento</th>
-                        <th className="py-3 px-2">Anamnese / TCLE</th>
-                        <th className="py-3 px-2 text-right">Prontuário</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-white/5">
-                      {(appointments || []).map((app, idx) => (
-                        <tr key={`crm-row-${idx}`} className="hover:bg-white/5 transition-colors">
-                          <td className="py-4 px-2 text-white font-medium">{app.clientName || 'Paciente'}</td>
-                          <td className="py-4 px-2 text-stone-400">{app.clientPhone || 'Não informado'}</td>
-                          <td className="py-4 px-2 text-white">{app.procedureName || 'Estética'}</td>
-                          <td className="py-4 px-2">
-                            <span className="text-emerald-400 bg-emerald-950/40 border border-emerald-500/30 px-2.5 py-1 rounded text-[9px] inline-flex items-center gap-1 font-semibold">
-                              <Check className="w-3 h-3" /> Assinado & Válido
-                            </span>
-                          </td>
-                          <td className="py-4 px-2 text-right">
-                            <button 
-                              type="button"
-                              onClick={() => setSelectedPatient(app)}
-                              className="px-3.5 py-1.5 rounded-lg bg-[#D4AF37]/10 border border-[#D4AF37]/40 text-[#D4AF37] hover:bg-[#D4AF37] hover:text-black font-mono text-[9px] uppercase tracking-widest transition-all cursor-pointer font-bold"
-                            >
-                              Ver Prontuário
-                            </button>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-
-                {/* Patient Record Modal */}
-                {selectedPatient && (
-                  <div className="fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-center justify-center p-2.5 sm:p-6 overflow-y-auto">
-                    <div className="bg-[#0A0A0A] border border-[#D4AF37] max-w-2xl w-full p-4 sm:p-8 rounded-2xl relative shadow-2xl space-y-4 sm:space-y-6 my-auto max-h-[92vh] overflow-y-auto">
-                      <button 
-                        type="button"
-                        onClick={() => setSelectedPatient(null)}
-                        className="absolute top-4 right-4 text-stone-400 hover:text-white p-1 rounded-full border border-stone-800 cursor-pointer"
-                      >
-                        <X className="w-5 h-5" />
-                      </button>
-
-                      <div className="border-b border-[#D4AF37]/20 pb-4">
-                        <span className="font-mono text-[9px] text-[#D4AF37] uppercase tracking-widest block font-semibold">
-                          Prontuário Médico Digital
-                        </span>
-                        <h3 className="font-serif text-2xl sm:text-3xl text-white mt-1">
-                          {selectedPatient.clientName || 'Paciente'}
-                        </h3>
-                        <p className="font-mono text-[10px] text-stone-400 uppercase tracking-widest mt-1">
-                          Contato: {selectedPatient.clientPhone || ''} | CPF: 482.931.***-**
-                        </p>
-                      </div>
-
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        <div className="bg-[#141619] p-4 rounded-xl border border-white/5">
-                          <p className="font-mono text-[9px] text-stone-500 uppercase tracking-widest mb-1">Último Procedimento</p>
-                          <p className="text-white text-sm font-medium">{selectedPatient.procedureName || ''}</p>
-                        </div>
-                        <div className="bg-[#141619] p-4 rounded-xl border border-white/5">
-                          <p className="font-mono text-[9px] text-stone-500 uppercase tracking-widest mb-1">Status de Alergia</p>
-                          <p className="text-emerald-400 text-sm font-medium">Nenhuma restrição relatada</p>
-                        </div>
-                      </div>
-
-                      <div className="space-y-2">
-                        <p className="font-mono text-[10px] text-stone-400 uppercase tracking-widest">Histórico de Anamnese & Observações da Dra.</p>
-                        <div className="bg-[#141619] p-4 rounded-xl border border-white/5 text-xs text-stone-300 font-mono leading-relaxed">
-                          Paciente relata desejo de naturalidade e sustentação no terço médio da face. Pele íntegra, sem contraindicações para ácido hialurônico de alta reticulação. Retorno agendado para 14 dias para revisão clínica.
-                        </div>
-                      </div>
-
-                      <div className="flex flex-col sm:flex-row justify-between items-center gap-3 pt-4 border-t border-white/10">
-                        <button
-                          type="button"
-                          onClick={() => setSelectedPatient(null)}
-                          className="w-full sm:w-auto px-5 py-2.5 rounded-full border border-stone-800 text-stone-400 hover:text-white font-mono text-xs uppercase tracking-wider cursor-pointer"
-                        >
-                          Fechar
-                        </button>
-                        <button 
-                          type="button"
-                          onClick={() => {
-                            const phone = (selectedPatient.clientPhone || '').replace(/\D/g, '');
-                            const msg = `Olá ${selectedPatient.clientName || ''}, aqui é da Lumière Clinic. Como está sendo a recuperação do seu procedimento? Estamos à disposição! ✨`;
-                            window.open(`https://wa.me/55${phone}?text=${encodeURIComponent(msg)}`, '_blank');
-                          }}
-                          className="w-full sm:w-auto px-6 py-2.5 rounded-full bg-[#D4AF37] text-black font-mono text-xs uppercase tracking-widest hover:bg-white transition-all flex items-center justify-center gap-2 cursor-pointer font-bold shadow-md"
-                        >
-                          <MessageSquare className="w-4 h-4" /> Enviar Mensagem Pós-Procedimento
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                )}
-              </div>
+              <CrmKanbanBoard 
+                appointments={appointments}
+                onUpdateAppointment={handleUpdateAppointment}
+                onAddAppointment={handleAddAppointment}
+                onDeleteAppointment={handleDeleteAppointment}
+              />
             )}
 
             {/* 4. PROCEDURES TAB */}

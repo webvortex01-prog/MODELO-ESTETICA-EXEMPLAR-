@@ -28,9 +28,16 @@ export interface Appointment {
   procedureName: string;
   date: string; // YYYY-MM-DD
   time: string; // HH:mm
-  status: 'pending' | 'confirmed' | 'completed' | 'cancelled';
+  status: 'pending' | 'confirmed' | 'in_waiting' | 'in_progress' | 'completed' | 'cancelled';
   price: number;
+  depositPaid?: boolean;
+  depositAmount?: number;
+  room?: string;
+  professional?: string;
   notes?: string;
+  clinicalNotes?: string;
+  tcleSigned?: boolean;
+  anamneseSummary?: string;
   createdAt: string;
 }
 
