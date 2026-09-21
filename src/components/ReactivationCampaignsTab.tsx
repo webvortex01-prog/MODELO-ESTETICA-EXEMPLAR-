@@ -8,19 +8,33 @@ export default function ReactivationCampaignsTab() {
     { id: 'c3', title: 'Aniversariantes do Mês', targetCount: 12, template: 'Parabéns {nome}! A Lumière Clinic preparou um voucher exclusivo de R$ 150 para seu presente de aniversário.', sent: false }
   ]);
 
-  const handleTrigger = (id: string) => {
+  const [notification, setNotification] = useState<string | null>(null);
+
+  const handleTrigger = (id: string, title: string) => {
     setCampaigns(campaigns.map(c => c.id === id ? { ...c, sent: true } : c));
-    alert('Campanha de WhatsApp disparada com sucesso para a base de pacientes!');
+    setNotification(`Campanha "${title}" disparada com sucesso via WhatsApp para os pacientes!`);
+    setTimeout(() => {
+      setNotification(null);
+    }, 4500);
   };
 
   return (
     <div className="space-y-8 animate-in fade-in">
-      <div className="flex justify-between items-center">
+      <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4">
         <div>
           <h3 className="font-serif text-2xl text-white">Automação de Campanhas & Reativação (CRM)</h3>
-          <p className="font-mono text-[10px] text-stone-400 uppercase tracking-widest mt-1">Disparos inteligentes baseados no ciclo de vida do procedimento</p>
+          <p className="font-mono text-[10px] text-stone-400 uppercase tracking-widest mt-1">
+            Disparos inteligentes baseados no ciclo de vida do procedimento
+          </p>
         </div>
       </div>
+
+      {notification && (
+        <div className="p-4 rounded-xl bg-emerald-950/60 border border-emerald-500/40 text-emerald-300 font-mono text-xs flex items-center gap-3 animate-in fade-in">
+          <CheckCircle2 className="w-5 h-5 text-emerald-400 shrink-0" />
+          <span>{notification}</span>
+        </div>
+      )}
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         {campaigns.map(camp => (
@@ -39,10 +53,11 @@ export default function ReactivationCampaignsTab() {
             <div className="pt-4 border-t border-white/10 flex items-center justify-between">
               <span className="font-mono text-[8px] text-stone-500 uppercase tracking-widest">Canal: WhatsApp API</span>
               <button 
-                onClick={() => handleTrigger(camp.id)}
-                className={`px-4 py-2 font-mono text-[9px] uppercase tracking-widest transition-all inline-flex items-center gap-2 ${
+                type="button"
+                onClick={() => handleTrigger(camp.id, camp.title)}
+                className={`px-4 py-2 font-mono text-[9px] uppercase tracking-widest transition-all inline-flex items-center gap-2 cursor-pointer font-bold ${
                   camp.sent 
-                    ? 'bg-stone-800 text-stone-400 cursor-default' 
+                    ? 'bg-stone-800 text-stone-300 hover:bg-stone-700' 
                     : 'bg-[#D4AF37] text-black hover:bg-white'
                 }`}
               >

@@ -3,6 +3,7 @@ import { motion } from 'motion/react';
 import ClientApp from './components/ClientApp';
 import AdminApp from './components/AdminApp';
 import DemoWelcomeModal from './components/DemoWelcomeModal';
+import ErrorBoundary from './components/ErrorBoundary';
 import { Sparkles, Shield, HelpCircle, Zap } from 'lucide-react';
 
 export default function App() {
@@ -86,7 +87,17 @@ export default function App() {
 
       {/* Main Content Area */}
       <main className="flex-1 flex overflow-hidden">
-        {view === 'client' ? <ClientApp /> : <AdminApp />}
+        <ErrorBoundary 
+          fallbackTitle="Painel Administrativo"
+          fallbackMessage="Ocorreu uma pequena instabilidade na navegação. Clique para retornar à vitrine ou reiniciar."
+          onGoHome={() => setView('client')}
+        >
+          {view === 'client' ? (
+            <ClientApp />
+          ) : (
+            <AdminApp onBackToClient={() => setView('client')} />
+          )}
+        </ErrorBoundary>
       </main>
     </div>
   );
