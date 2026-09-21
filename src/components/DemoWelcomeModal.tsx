@@ -66,39 +66,42 @@ export default function DemoWelcomeModal({ isOpen, onClose, onSelectView }: Demo
           </div>
 
           {/* Navigation Tabs inside Modal */}
-          <div className="px-6 sm:px-8 pt-4 pb-2 border-b border-stone-800/80 flex gap-2 sm:gap-4 bg-black/20 overflow-x-auto">
-            <button
-              onClick={() => setActiveTab('overview')}
-              className={`px-4 py-2 rounded-full text-xs font-mono tracking-wider uppercase transition-all whitespace-nowrap cursor-pointer ${
-                activeTab === 'overview'
-                  ? 'bg-[#D4AF37] text-black font-bold shadow-[0_0_15px_rgba(212,175,55,0.4)]'
-                  : 'text-stone-400 hover:text-stone-200 bg-stone-900/50'
-              }`}
-            >
-              🚀 Como Funciona o Teste
-            </button>
-            <button
-              onClick={() => setActiveTab('client')}
-              className={`px-4 py-2 rounded-full text-xs font-mono tracking-wider uppercase transition-all whitespace-nowrap flex items-center gap-1.5 cursor-pointer ${
-                activeTab === 'client'
-                  ? 'bg-[#D4AF37] text-black font-bold shadow-[0_0_15px_rgba(212,175,55,0.4)]'
-                  : 'text-stone-400 hover:text-stone-200 bg-stone-900/50'
-              }`}
-            >
-              <Sparkles className="w-3.5 h-3.5" />
-              1. Área do Cliente (B2C)
-            </button>
-            <button
-              onClick={() => setActiveTab('admin')}
-              className={`px-4 py-2 rounded-full text-xs font-mono tracking-wider uppercase transition-all whitespace-nowrap flex items-center gap-1.5 cursor-pointer ${
-                activeTab === 'admin'
-                  ? 'bg-[#D4AF37] text-black font-bold shadow-[0_0_15px_rgba(212,175,55,0.4)]'
-                  : 'text-stone-400 hover:text-stone-200 bg-stone-900/50'
-              }`}
-            >
-              <Shield className="w-3.5 h-3.5" />
-              2. Painel Admin (B2B)
-            </button>
+          <div className="px-4 sm:px-8 py-3 sm:py-4 border-b border-stone-800/80 bg-black/40 flex items-center justify-start sm:justify-center overflow-x-auto no-scrollbar">
+            <div className="inline-flex items-center p-1.5 rounded-2xl sm:rounded-full bg-stone-950/90 border border-[#D4AF37]/30 shadow-inner gap-1.5 sm:gap-2 shrink-0">
+              <button
+                onClick={() => setActiveTab('overview')}
+                className={`px-4 sm:px-5 py-2 sm:py-2.5 rounded-xl sm:rounded-full text-xs font-mono tracking-wider uppercase transition-all whitespace-nowrap flex items-center gap-2 cursor-pointer leading-none ${
+                  activeTab === 'overview'
+                    ? 'bg-gradient-to-r from-[#D4AF37] to-[#F3E5AB] text-black font-bold shadow-[0_0_20px_rgba(212,175,55,0.4)]'
+                    : 'text-stone-400 hover:text-stone-200 hover:bg-white/5'
+                }`}
+              >
+                <Zap className="w-3.5 h-3.5 shrink-0" />
+                <span>Como Funciona o Teste</span>
+              </button>
+              <button
+                onClick={() => setActiveTab('client')}
+                className={`px-4 sm:px-5 py-2 sm:py-2.5 rounded-xl sm:rounded-full text-xs font-mono tracking-wider uppercase transition-all whitespace-nowrap flex items-center gap-2 cursor-pointer leading-none ${
+                  activeTab === 'client'
+                    ? 'bg-gradient-to-r from-[#D4AF37] to-[#F3E5AB] text-black font-bold shadow-[0_0_20px_rgba(212,175,55,0.4)]'
+                    : 'text-stone-400 hover:text-stone-200 hover:bg-white/5'
+                }`}
+              >
+                <Sparkles className="w-3.5 h-3.5 shrink-0" />
+                <span>1. Área do Cliente (B2C)</span>
+              </button>
+              <button
+                onClick={() => setActiveTab('admin')}
+                className={`px-4 sm:px-5 py-2 sm:py-2.5 rounded-xl sm:rounded-full text-xs font-mono tracking-wider uppercase transition-all whitespace-nowrap flex items-center gap-2 cursor-pointer leading-none ${
+                  activeTab === 'admin'
+                    ? 'bg-gradient-to-r from-[#D4AF37] to-[#F3E5AB] text-black font-bold shadow-[0_0_20px_rgba(212,175,55,0.4)]'
+                    : 'text-stone-400 hover:text-stone-200 hover:bg-white/5'
+                }`}
+              >
+                <Shield className="w-3.5 h-3.5 shrink-0" />
+                <span>2. Painel Admin (B2B)</span>
+              </button>
+            </div>
           </div>
 
           {/* Content Body */}
