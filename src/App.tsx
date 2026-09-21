@@ -86,18 +86,33 @@ export default function App() {
       </header>
 
       {/* Main Content Area */}
-      <main className="flex-1 flex overflow-hidden">
-        <ErrorBoundary 
-          fallbackTitle="Painel Administrativo"
-          fallbackMessage="Ocorreu uma pequena instabilidade na navegação. Clique para retornar à vitrine ou reiniciar."
-          onGoHome={() => setView('client')}
+      <main className="flex-1 flex overflow-hidden relative w-full h-full">
+        <div 
+          className={`w-full h-full flex-1 flex flex-col ${view === 'client' ? 'flex' : 'hidden'}`}
+          aria-hidden={view !== 'client'}
         >
-          {view === 'client' ? (
+          <ErrorBoundary 
+            fallbackTitle="Vitrine do Cliente"
+            fallbackMessage="Ocorreu uma pequena instabilidade na vitrine de agendamentos."
+            onReset={() => setView('client')}
+          >
             <ClientApp />
-          ) : (
+          </ErrorBoundary>
+        </div>
+
+        <div 
+          className={`w-full h-full flex-1 flex flex-col ${view === 'admin' ? 'flex' : 'hidden'}`}
+          aria-hidden={view !== 'admin'}
+        >
+          <ErrorBoundary 
+            fallbackTitle="Painel Administrativo"
+            fallbackMessage="Ocorreu uma pequena instabilidade no painel administrativo."
+            onGoHome={() => setView('client')}
+            onReset={() => setView('admin')}
+          >
             <AdminApp onBackToClient={() => setView('client')} />
-          )}
-        </ErrorBoundary>
+          </ErrorBoundary>
+        </div>
       </main>
     </div>
   );
